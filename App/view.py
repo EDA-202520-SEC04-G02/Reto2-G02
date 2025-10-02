@@ -1,12 +1,50 @@
 import sys
 
+# Importaciones necesarias
+import App.logic as logic # Portar logic porque, pues muy dificil sin logic no?
+from tabulate import tabulate # Para imprimir tablas bonitas
+import os
+data_dir = os.path.dirname(os.path.realpath('__file__')) + '/Data/'
+# -------------------------------------------------
 
 def new_logic():
     """
         Se crea una instancia del controlador
     """
-    #TODO: Llamar la función de la lógica donde se crean las estructuras de datos
-    pass
+    #TODO DONE: Llamar la función de la lógica donde se crean las estructuras de datos
+    control = logic.new_logic()
+    return control
+
+def load_data(control): # Note que control es el catalog en view
+    """
+    Carga los datos
+    """
+    taxisfile = data_dir + "taxis-large.csv"           # Contruimos las rutas de los archivos aquí
+    neighfile = data_dir + "nyc-neighborhoods.csv"     # Así no hay que importarlos en logic, que es más limpio
+    #TODO DONE: Realizar la carga de datos
+    resultados = logic.load_data(control, taxisfile, neighfile) # Ahora si me voy a logic a cargar los datos, retorno los resultados
+    
+    print("\n=== Resultados de la carga de datos ===")
+    print(f"Tiempo de carga: {resultados['time_ms']:.2f} ms")
+    print(f"Total de trayectos cargados: {resultados['total_trips']}")
+
+    # Trayecto mínimo
+    min_t = resultados["min_trip"]
+    print("\nTrayecto de menor distancia (>0):")
+    print(f"Inicio: {min_t['pickup_datetime']} | Distancia: {min_t['trip_distance']} millas | Total: {min_t['total_amount']} USD")
+
+    # Trayecto máximo
+    max_t = resultados["max_trip"]
+    print("\nTrayecto de mayor distancia:")
+    print(f"Inicio: {max_t['pickup_datetime']} | Distancia: {max_t['trip_distance']} millas | Total: {max_t['total_amount']} USD")
+
+    # Preview
+    print("\nPrimeros y últimos 5 trayectos:")
+    headers = ["pickup_datetime", "dropoff_datetime", "duration_min", "distance_miles", "total_amount"]
+    table = [[p[h] for h in headers] for p in resultados["preview"]] # Con ayuda de char hicimos esta lista de listas para poder usar tabulate
+    print(tabulate(table, headers=headers, tablefmt="grid"))
+    return resultados
+
 
 def print_menu():
     print("Bienvenido")
@@ -19,27 +57,48 @@ def print_menu():
     print("6- Ejecutar Requerimiento 6")
     print("7- Salir")
 
-def load_data(control):
-    """
-    Carga los datos
-    """
-    #TODO: Realizar la carga de datos
-    pass
-
-
 def print_data(control, id):
     """
         Función que imprime un dato dado su ID
     """
-    #TODO: Realizar la función para imprimir un elemento
+    #TODO NO HACER: Realizar la función para imprimir un elemento
     pass
 
 def print_req_1(control):
     """
         Función que imprime la solución del Requerimiento 1 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 1
-    pass
+    # TODO DONE: Imprimir el resultado del requerimiento 1
+    fecha_ini = input("Ingrese la fecha y hora inicial (YYYY-MM-DD HH:MM:SS): ")
+    fecha_fin = input("Ingrese la fecha y hora final (YYYY-MM-DD HH:MM:SS): ")
+    N = int(input("Ingrese el tamaño de la muestra N: "))
+
+    resultado = logic.req_1(control, fecha_ini, fecha_fin, N)
+
+    print("\n=== Requerimiento 1 ===")
+    print(f"Tiempo de ejecución: {resultado['time_ms']:.2f} ms")
+    print(f"Total de trayectos en franja: {resultado['total']}")
+
+    headers = ["pickup_datetime", "pickup_location", "dropoff_datetime", "dropoff_location", "trip_distance", "total_amount"]
+
+    def format_trip(trip):
+        return [
+            trip["pickup_datetime"],
+            [float(trip["pickup_latitude"]), float(trip["pickup_longitude"])],
+            trip["dropoff_datetime"],
+            [float(trip["dropoff_latitude"]), float(trip["dropoff_longitude"])],
+            float(trip["trip_distance"]),
+            float(trip["total_amount"])
+        ]
+
+    primeros = [format_trip(trip) for trip in resultado["primeros"]["elements"]]
+    ultimos = [format_trip(trip) for trip in resultado["ultimos"]["elements"]]
+
+    print("\nPrimeros N trayectos:")
+    print(tabulate(primeros, headers=headers, tablefmt="grid"))
+
+    print("\nÚltimos N trayectos:")
+    print(tabulate(ultimos, headers=headers, tablefmt="grid"))
 
 
 def print_req_2(control):
