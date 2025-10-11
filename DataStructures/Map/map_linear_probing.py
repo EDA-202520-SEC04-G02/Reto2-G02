@@ -1,3 +1,4 @@
+import random
 from DataStructures.List import array_list as al
 from DataStructures.Map import map_entry as me
 from DataStructures.Map import map_functions as mf
@@ -90,8 +91,10 @@ def new_map(num_elements, load_factor, prime=109345121):
     return {
         "prime": prime,
         "capacity": capacity,
-        "scale": 1,   # fijo por requerimientos de pruebas
-        "shift": 0,   # fijo por requerimientos de pruebas
+        # "scale": 1,   # fijo por requerimientos de pruebas
+        # "shift": 0,   # fijo por requerimientos de pruebas
+        "scale": random.randint(1, prime - 1),
+        "shift": random.randint(0, prime - 1),
         "table": table,
         "current_factor": 0.0,
         "limit_factor": load_factor,
