@@ -129,16 +129,99 @@ def print_req_5(control):
     """
         Función que imprime la solución del Requerimiento 5 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 5
-    pass
+    # TODO DONE: Imprimir el resultado del requerimiento 5
+    
+    fecha_hora = input("Ingrese la fecha y hora de terminación (YYYY-MM-DD HH): ")
+    N = int(input("Ingrese el tamaño de la muestra N: "))
+
+    resultado = logic.req_5(control, fecha_hora, N)
+
+    print("\n=== Requerimiento 5 ===")
+    print(f"Tiempo de ejecución: {resultado['tiempo_ms']:.2f} ms")
+    print(f"Total de trayectos con fecha y hora de terminación {fecha_hora}: {resultado['total']}")
+
+    # No hay resultados
+    if resultado["total"] == 0:
+        print("\nNo se encontraron trayectos para la fecha y hora especificadas.")
+        return
+
+    headers = [
+        "pickup_datetime", 
+        "pickup_location", 
+        "dropoff_datetime", 
+        "dropoff_location", 
+        "trip_distance", 
+        "total_amount"
+    ]
+
+    def format_trip(trip):
+        return [
+            trip["pickup_datetime"],
+            [float(trip["pickup_latitude"]), float(trip["pickup_longitude"])],
+            trip["dropoff_datetime"],
+            [float(trip["dropoff_latitude"]), float(trip["dropoff_longitude"])],
+            float(trip["trip_distance"]),
+            float(trip["total_amount"])
+        ]
+
+    primeros = [format_trip(trip) for trip in resultado["primeros"]["elements"]]
+    ultimos = [format_trip(trip) for trip in resultado["ultimos"]["elements"]]
+
+    print("\nPrimeros N trayectos:")
+    print(tabulate(primeros, headers=headers, tablefmt="grid"))
+
+    print("\nÚltimos N trayectos:")
+    print(tabulate(ultimos, headers=headers, tablefmt="grid"))
+
 
 
 def print_req_6(control):
     """
         Función que imprime la solución del Requerimiento 6 en consola
     """
-    # TODO: Imprimir el resultado del requerimiento 6
-    pass
+    # TODO DONE: Imprimir el resultado del requerimiento 6
+    # Solicitar parámetros al usuario
+    barrio = input("Ingrese el nombre del barrio de recogida: ")
+    hora_ini = input("Ingrese la hora inicial del rango (HH): ")
+    hora_fin = input("Ingrese la hora final del rango (HH): ")
+    N = int(input("Ingrese el tamaño de la muestra N: "))
+
+    # Ejecutar el requerimiento
+    resultado = logic.req_6(control, barrio, hora_ini, hora_fin, N)
+
+    print("\n=== Requerimiento 6 ===")
+    print(f"Tiempo de ejecución: {resultado['tiempo_ms']:.2f} ms")
+    print(f"Total de trayectos en {barrio} entre las horas {hora_ini} y {hora_fin}: {resultado['total']}")
+
+    # Definir los encabezados para tabulate
+    headers = [
+        "pickup_datetime", "pickup_location",
+        "dropoff_datetime", "dropoff_location",
+        "trip_distance", "total_amount"
+    ]
+
+    # Función de formato de cada trayecto
+    def format_trip(trip):
+        return [
+            trip["pickup_datetime"],
+            [float(trip["pickup_latitude"]), float(trip["pickup_longitude"])],
+            trip["dropoff_datetime"],
+            [float(trip["dropoff_latitude"]), float(trip["dropoff_longitude"])],
+            float(trip["trip_distance"]),
+            float(trip["total_amount"])
+        ]
+
+    # Obtener las listas de elementos
+    primeros = [format_trip(trip) for trip in resultado["primeros"]["elements"]]
+    ultimos = [format_trip(trip) for trip in resultado["ultimos"]["elements"]]
+
+    # Imprimir en formato tabla
+    print("\nPrimeros N trayectos:")
+    print(tabulate(primeros, headers=headers, tablefmt="grid"))
+
+    print("\nÚltimos N trayectos:")
+    print(tabulate(ultimos, headers=headers, tablefmt="grid"))
+
 
 # Se crea la lógica asociado a la vista
 control = new_logic()
@@ -171,7 +254,7 @@ def main():
         elif int(inputs) == 5:
             print_req_5(control)
 
-        elif int(inputs) == 5:
+        elif int(inputs) == 6:
             print_req_6(control)
 
         elif int(inputs) == 7:

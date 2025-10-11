@@ -6,6 +6,8 @@ from DataStructures.List import array_list as lt # Importo mi implementación de
 csv.field_size_limit(2147483647) # Consejo de la guía
 from datetime import datetime # Importamos datetime, porque es MUCHO MEJOR para manejar fechas que hacer todo a mano
 import math
+from DataStructures.Map import map_linear_probing as mp 
+
 # -----------------------------------------
 
 def new_logic():
@@ -239,20 +241,123 @@ def req_4(catalog):
     pass
 
 
-def req_5(catalog):
+def req_5(catalog, fecha_hora, n):
     """
     Retorna el resultado del requerimiento 5
     """
-    # TODO: Modificar el requerimiento 5
-    pass
+    # TODO DONE: Modificar el requerimiento 5
+    
+    start = get_time()
+    tabla = mp.new_map(lt.size(catalog["trips"]), 0.7)
+    fmt = "%Y-%m-%d %H:%M:%S"
 
-def req_6(catalog):
+    # 1. Agrupar trayectos por fecha-hora de terminación
+    for i in range(lt.size(catalog["trips"])):
+        trip = lt.get_element(catalog["trips"], i)
+        key = datetime.strptime(trip["dropoff_datetime"], fmt).strftime("%Y-%m-%d %H")
+
+        lista = mp.get(tabla, key)
+        if lista is None:
+            lista = lt.new_list()
+            mp.put(tabla, key, lista)
+        lt.add_last(lista, trip)
+
+    # 2. Obtener la lista de la hora solicitada
+    lista_filtrada = mp.get(tabla, fecha_hora)
+    if lista_filtrada is None:
+        end = get_time()
+        delta = delta_time(start, end)
+        return {
+            "total": 0,
+            "tiempo_ms": delta,
+            "primeros": None,
+            "ultimos": None
+        }
+
+    # 3. Ordenar por hora de terminación descendente
+    def cmp_desc(a, b):
+        return a["dropoff_datetime"] > b["dropoff_datetime"]
+
+    lt.shell_sort(lista_filtrada, cmp_desc)
+
+    # 4. Tomar los primeros y últimos N trayectos
+    total = lt.size(lista_filtrada)
+    n = min(n, total)
+    primeros = lt.sub_list(lista_filtrada, 0, n)
+    ultimos = lt.sub_list(lista_filtrada, total - n, n) if total > n else lt.new_list()
+
+    # 5. Retornar resultados
+    end = get_time()
+    delta = delta_time(start, end)
+    return {
+        "total": total,
+        "tiempo_ms": delta,
+        "primeros": primeros,
+        "ultimos": ultimos
+    }
+
+def req_6(catalog, barrio, hora_ini, hora_fin, n):
     """
     Retorna el resultado del requerimiento 6
     """
-    # TODO: Modificar el requerimiento 6
-    pass
+    # TODO DONE: Modificar el requerimiento 6
+    start = get_time()
+    tabla = mp.new_map(lt.size(catalog["trips"]), 0.7)
+    fmt = "%Y-%m-%d %H:%M:%S"
 
+    # 1. Agrupar trayectos por barrio de inicio
+    for i in range(lt.size(catalog["trips"])):
+        trip = lt.get_element(catalog["trips"], i)
+        key = find_nearest_neighborhood(
+            catalog["neighborhoods"],
+            float(trip["pickup_latitude"]),
+            float(trip["pickup_longitude"])
+        )
+        lista = mp.get(tabla, key)
+        if lista is None:
+            lista = lt.new_list()
+            mp.put(tabla, key, lista)
+        lt.add_last(lista, trip)
+
+    lista_filtrada = mp.get(tabla, barrio)
+    if lista_filtrada is None:
+        end = get_time()
+        return {
+            "total": 0,
+            "tiempo_ms": delta_time(start, end),
+            "primeros": None,
+            "ultimos": None
+        }
+
+    # 2. Filtrar por rango de horas de recogida
+    filtrados = lt.new_list()
+    for i in range(lt.size(lista_filtrada)):
+        trip = lt.get_element(lista_filtrada, i)
+        hora = datetime.strptime(trip["pickup_datetime"], fmt).hour
+        if int(hora_ini) <= hora <= int(hora_fin):
+            lt.add_last(filtrados, trip)
+
+    # 3. Ordenar por hora de recogida ascendente
+    def cmp_as(a, b):
+        return a["pickup_datetime"] < b["pickup_datetime"]
+
+    lt.shell_sort(filtrados, cmp_as)
+
+    # 4. Tomar los primeros y últimos N trayectos
+    total = lt.size(filtrados)
+    n = min(n, total)
+    primeros = lt.sub_list(filtrados, 0, n)
+    ultimos = lt.sub_list(filtrados, total - n, n) if total > n else lt.new_list()
+
+    # 5. Retornar resultados
+    end = get_time()
+    delta = delta_time(start, end)
+    return {
+        "total": total,
+        "tiempo_ms": delta,
+        "primeros": primeros,
+        "ultimos": ultimos
+    }
 
 # Funciones para medir tiempos de ejecucion
 
