@@ -203,8 +203,12 @@ def req_1(catalog, fecha_ini, fecha_fin, N):
     total = lt.size(filtrados)
 
     # 3. N primeros y últimos (sin formatear)
-    primeros = lt.sub_list(filtrados, 0, min(N, total))
-    ultimos = lt.sub_list(filtrados, max(0, total - N), min(N, total))
+    if total <= 2 * N:
+        primeros = lt.sub_list(filtrados, 0, total)  
+        ultimos = lt.new_list()                           
+    else:
+        primeros = lt.sub_list(filtrados, 0, N)
+        ultimos = lt.sub_list(filtrados, total - N, N)
 
     end = get_time()
     delta = delta_time(start, end)
@@ -217,13 +221,49 @@ def req_1(catalog, fecha_ini, fecha_fin, N):
     }
 
 
-def req_2(catalog):
+def req_2(catalog, lat_ini, lat_fin, N):
     """
     Retorna el resultado del requerimiento 2
     """
     # TODO: Modificar el requerimiento 2
-    pass
+    start = get_time()
+    
+    low= float(lat_ini)
+    high = float(lat_fin)
+    
+    filtrados = lt.new_list()
+    size_trips = lt.size(catalog["trips"])
+    for i in range(size_trips):
+        t = lt.get_element(catalog["trips"], i)
+        lat = float(t["pickup_latitude"])
+        if low <= lat <= high:
+            lt.add_last(filtrados, t)
+    def cmp_desc_lat_lon(a,b):
+        la = float(a["pickup_latitude"])
+        lb = float (b["pickup_latitude"])
+        if la!=lb:
+            return la > lb
+        return float(a["pickup_longitude"]) > float(b["pickup_longitude"])
+    
+    filtrados = lt.merge_sort(filtrados, cmp_desc_lat_lon)
+    
+    total = lt.size(filtrados)
 
+    if total <= 2 * N:
+        primeros = lt.sub_list(filtrados, 0, total)  
+        ultimos = lt.new_list()                           
+    else:
+        primeros = lt.sub_list(filtrados, 0, N)
+        ultimos = lt.sub_list(filtrados, total - N, N)
+
+    end = get_time()
+    
+    return {
+        "tiempo_ms": delta_time(start, end),
+        "total": total,
+        "primeros": primeros,
+        "ultimos": ultimos
+    }
 
 def req_3(catalog):
     """
@@ -233,13 +273,78 @@ def req_3(catalog):
     pass
 
 
-def req_4(catalog):
+def req_4(catalog, fecha_terminacion, momento_interes,tiempo_ref,N):
     """
     Retorna el resultado del requerimiento 4
     """
     # TODO: Modificar el requerimiento 4
-    pass
-
+    
+    start = get_time()
+    
+    fmt_dt = "%Y-%m-%d %H:%M:%S"
+    fmt_d = "%Y-%m-%d"
+    fmt_t = "%H:%M:%S"
+    
+    tabla = mp.new_map(lt.size(catalog["trips"]), 0.7)
+    
+    size_trips = lt.size(catalog["trips"])
+    
+    for i in range(size_trips):
+        trip = lt.get_element(catalog["trips"], i)
+        key = datetime.strptime(trip["dropoff_datetime"], fmt_dt).strftime(fmt_d)
+    
+        lista = mp.get(tabla, key)
+        if lista is None:
+            lista = lt.new_list()    
+            mp.put(tabla, key, lista)
+        lt.add_last(lista, trip)
+    
+    lista_fecha = mp.get(tabla, fecha_terminacion)
+    if lista_fecha is None:
+        end = get_time()
+        return {
+            "tiempo_ms": delta_time(start, end),
+            "total": 0,
+            "primeros": None,
+            "ultimos": None
+        }
+    
+    ref_time = datetime.strptime(tiempo_ref, fmt_t).time()
+    filtrados = lt.new_list()
+    
+    for i in range(lt.size(lista_fecha)):
+        trip = lt.get_element(lista_fecha, i)
+        d_end = datetime.strptime(trip["dropoff_datetime"], fmt_dt)
+        t_end = d_end.time()
+        if momento_interes == "ANTES":
+            if t_end < ref_time:
+                lt.add_last(filtrados, trip)
+        else:
+            if t_end > ref_time:
+                lt.add_last(filtrados, trip)
+            
+    def cmp_desc(a, b):
+        return a["dropoff_datetime"] > b["dropoff_datetime"]
+    
+    lt.shell_sort(filtrados, cmp_desc)
+    
+    total = lt.size(filtrados)
+    
+    if total <= 2 * N:
+        primeros = lt.sub_list(filtrados, 0, total)  
+        ultimos = lt.new_list()                           
+    else:
+        primeros = lt.sub_list(filtrados, 0, N)
+        ultimos = lt.sub_list(filtrados, total - N, N)
+        
+    end = get_time()
+    return {
+        "tiempo_ms": delta_time(start, end),
+        "total": total,
+        "primeros": primeros,
+        "ultimos": ultimos
+    }
+    
 
 def req_5(catalog, fecha_hora, n):
     """
@@ -282,9 +387,13 @@ def req_5(catalog, fecha_hora, n):
 
     # 4. Tomar los primeros y últimos N trayectos
     total = lt.size(lista_filtrada)
-    n = min(n, total)
-    primeros = lt.sub_list(lista_filtrada, 0, n)
-    ultimos = lt.sub_list(lista_filtrada, total - n, n) if total > n else lt.new_list()
+    
+    if total <= 2 * n:
+        primeros = lt.sub_list(lista_filtrada, 0, total)  
+        ultimos = lt.new_list()                           
+    else:
+        primeros = lt.sub_list(lista_filtrada, 0, n)
+        ultimos = lt.sub_list(lista_filtrada, total - n, n)
 
     # 5. Retornar resultados
     end = get_time()
@@ -345,9 +454,13 @@ def req_6(catalog, barrio, hora_ini, hora_fin, n):
 
     # 4. Tomar los primeros y últimos N trayectos
     total = lt.size(filtrados)
-    n = min(n, total)
-    primeros = lt.sub_list(filtrados, 0, n)
-    ultimos = lt.sub_list(filtrados, total - n, n) if total > n else lt.new_list()
+    
+    if total <= 2 * n:
+        primeros = lt.sub_list(filtrados, 0, total)
+        ultimos  = lt.new_list()                     
+    else:
+        primeros = lt.sub_list(filtrados, 0, n)
+        ultimos  = lt.sub_list(filtrados, total - n, n)
 
     # 5. Retornar resultados
     end = get_time()
