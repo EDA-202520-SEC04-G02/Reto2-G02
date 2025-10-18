@@ -203,7 +203,7 @@ def req_1(catalog, fecha_ini, fecha_fin, N):
     total = lt.size(filtrados)
 
     # 3. N primeros y últimos (sin formatear)
-    if total <= 2 * N:
+    if total < 2 * N:
         primeros = lt.sub_list(filtrados, 0, total)  
         ultimos = lt.new_list()                           
     else:
@@ -249,7 +249,7 @@ def req_2(catalog, lat_ini, lat_fin, N):
     
     total = lt.size(filtrados)
 
-    if total <= 2 * N:
+    if total < 2 * N:
         primeros = lt.sub_list(filtrados, 0, total)  
         ultimos = lt.new_list()                           
     else:
@@ -330,7 +330,7 @@ def req_4(catalog, fecha_terminacion, momento_interes,tiempo_ref,N):
     
     total = lt.size(filtrados)
     
-    if total <= 2 * N:
+    if total < 2 * N:
         primeros = lt.sub_list(filtrados, 0, total)  
         ultimos = lt.new_list()                           
     else:
@@ -388,7 +388,7 @@ def req_5(catalog, fecha_hora, n):
     # 4. Tomar los primeros y últimos N trayectos
     total = lt.size(lista_filtrada)
     
-    if total <= 2 * n:
+    if total < 2 * n:
         primeros = lt.sub_list(lista_filtrada, 0, total)  
         ultimos = lt.new_list()                           
     else:
@@ -455,7 +455,7 @@ def req_6(catalog, barrio, hora_ini, hora_fin, n):
     # 4. Tomar los primeros y últimos N trayectos
     total = lt.size(filtrados)
     
-    if total <= 2 * n:
+    if total < 2 * n:
         primeros = lt.sub_list(filtrados, 0, total)
         ultimos  = lt.new_list()                     
     else:
@@ -469,7 +469,7 @@ def req_6(catalog, barrio, hora_ini, hora_fin, n):
         "total": total,
         "tiempo_ms": delta,
         "primeros": primeros,
-        "ultimos": ultimos
+        "ultimos": ultimos  
     }
 
 # Funciones para medir tiempos de ejecucion
